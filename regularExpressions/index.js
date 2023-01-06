@@ -1,15 +1,17 @@
 //idが「submitButton」のHTML要素を取得している
 const button = document.getElementById("submitButton");
-//idが「resultTextAlp」のHTML要素を取得している
-const resultTextAlp = document.getElementById("resultTextAlp");
+//idが「resultTextChar」のHTML要素を取得している
+const resultTextChar = document.getElementById("resultTextChar");
+//idが「resultTextAlpInt」のHTML要素を取得している
+const resultTextAlpInt = document.getElementById("resultTextAlpInt");
 //idが「resultTextNum」のHTML要素を取得している
 const resultTextNum = document.getElementById("resultTextNum");
 
 //パスワードの判定用の正規表現をregexAllに代入している
-//英字数字がどちらも入っているか、文字数は8~15か、指定の記号と文字と数字のみで構成されているか
-const regexAll = /^(?=.*?[a-z])(?=.*?\d)[a-z\d\-_/*+.,!#$%&()~|]{8,15}$/i;
-//英字数字がどちらも入っているかの判断用の正規表現をregexAlpに代入している
-const regexAlp = /^(?=.*?[a-z])(?=.*?\d)[a-z\d]*$/i;
+//半角、数字、記号のみで構成されているかの判断用の正規表現をregexCharに代入している
+const regexChar = /^[a-z\d\-_/*+.,!#$%&()~|]*$/i;
+//英字数字がどちらも入っているかの判断用の正規表現をregexAlpIntに代入している
+const regexAlpInt = /^(?=.*?[a-z])(?=.*?\d)[a-z\d]*$/i;
 //文字数は適切かどうかの判断用の正規表現をregexNumに代入している
 const regexNum = /^.{8,15}$/;
 
@@ -21,35 +23,33 @@ button.addEventListener("click", function(e) {
 
     //入力した内容を取得して、textFormへ代入している
     const textForm = document.getElementById("pwText").value;
-    //入力した内容をtestメソッドの引数として、その結果をresultAllへ代入している
-    const resultAll = regexAll.test(textForm);
+
+    //入力した内容をtestメソッドの引数として、その結果をresultCharとresultAlpIntとresultNumへ代入している
+    const resultChar = regexChar.test(textForm);
+    const resultAlpInt = regexAlpInt.test(textForm);
+    const resultNum = regexNum.test(textForm);
 
     //以下2つはエラーメッセージ用のHTML要素を隠している
+    resultTextChar.style.display = "none";
+    resultTextAlpInt.style.display = "none";
     resultTextNum.style.display = "none";
-    resultTextAlp.style.display = "none";
 
-    //パスワードが正しいか正しくないかのif文で、正しくない場合にどのエラー文を出力するかのif文を実行します
-    if(!resultAll){
+    //このif文では半角アルファベット、数字、記号以外のものが入力されたらエラー文を表示します
+    if(!resultChar){
+        //エラー文を表示するためにスタイルを変更している
+        resultTextChar.style.display = "block";
+    }
 
-        //入力した内容をtestメソッドの引数として、その結果をresultAlpとresultNumへ代入している
-        const resultAlp = regexAlp.test(textForm);
-        const resultNum = regexNum.test(textForm);
+    //このif文ではパスワードが英字数字をどちらも含んでいるかの判定をして、含めれていなかったらエラー文を表示します
+    if(!resultAlpInt){
+        //エラー文を表示するためにスタイルを変更している
+        resultTextAlpInt.style.display = "block";
+    }
 
-        //このif文ではパスワードが英字数字をどちらも含んでいるかの判定をして、含めれていなかったらエラー文を表示します
-        if(!resultAlp){
-            //エラー文はinnerHTMLを使ってHTML要素へ値を代入している
-            resultTextAlp.innerHTML = "パスワードは英字と数字をどちらも含めてください";
-            //エラー文を表示するためにスタイルを変更している
-            resultTextAlp.style.display = "block";
-        }
-
-        //このif文では文字数が適切かを判定し、エラー文を表示します
-        if(!resultNum){
-            //エラー文はinnerHTMLを使ってHTML要素へ値を代入している
-            resultTextNum.innerHTML = "パスワードは8～15文字で設定してください";
-            //エラー文を表示するためにスタイルを変更している
-            resultTextNum.style.display = "block";
-        }
+    //このif文では文字数が適切かを判定し、エラー文を表示します
+    if(!resultNum){
+        //エラー文を表示するためにスタイルを変更している
+        resultTextNum.style.display = "block";
     }
     
 })
