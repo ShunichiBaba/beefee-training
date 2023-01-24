@@ -18,7 +18,7 @@ const regexAlpInt = /[a-z!-~][\d]|[\d][a-z!-~]/i;
 //文字数は適切かどうかの判断用の正規表現をregexNumに代入している
 const regexNum = /^.{8,15}$/;
 
-//「確認する」ボタンをクリックした際に関数を呼び出している
+// TODO: POST送信未実装
 button.addEventListener("click", function(e) {
 
     //preventDefaultでページが更新されないようにしている
