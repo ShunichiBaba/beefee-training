@@ -11,10 +11,10 @@ const resultSccess = document.getElementById("resultSccess");
 
 //パスワードの判定用の正規表現をregexAllに代入している
 //半角、数字、記号のみで構成されているかの判断用の正規表現をregexCharに代入している
-const regexChar = /^[a-z\d!-~]*$/i;
+const regexChar = /^[a-z\d!#-&(-/|~]*$/i;
 //英字数字がどちらも入っているかの判断用の正規表現をregexAlpIntに代入している
-//const regexAlpInt = /^(?=.*?[a-z])(?=.*?\d)[a-z\d]*$/i;
-const regexAlpInt = /[a-z!-~][\d]|[\d][a-z!-~]/i;
+//const regexAlpInt = /^(.*?[a-z])(.*?\d)[a-z\d]*$/i;
+const regexAlpInt = /[a-z][\d]|[\d][a-z]/i;
 //文字数は適切かどうかの判断用の正規表現をregexNumに代入している
 const regexNum = /^.{8,15}$/;
 
