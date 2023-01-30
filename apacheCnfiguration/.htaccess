@@ -1,0 +1,5 @@
+RewriteEngine On
+
+RewriteRule ^index.php$ http://example.local/ [L,R=301]
+
+RewriteRule ^123/$ /index.php/q=123 [L,R=301]
