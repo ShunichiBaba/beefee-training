@@ -1,0 +1,133 @@
+Apacheの設定についての課題
+
+本番環境については、
+\\192.168.1.101\グループ共有\14.システム\Shunichi_Baba\
+ここにサーバーアクセス情報があります。
+/admin/以下のBasic認証はどちらともtestで入ることできます。
+
+
+
+↓各課題の設定事項
+
+▼vhosts
+
+[/etc/httpd/conf.d/test.conf]
+・VirtualHostを80番ポートで2つ設定しました
+・それぞれにドキュメントルートとドメイン名を設定しました
+
+
+▼環境変数
+
+（ローカル環境）
+[/etc/httpd/conf.d/test.conf]
+・/var/www/html/testというディレクトリへ環境変数TEST_ENVへLOCALという値を設定しました
+
+[/var/www/html/test/test.php]
+TEST_ENVの値を取得し、LOCALであれば「ローカル環境です」、PRODUCTIONであれば「本番環境です」と表示される
+
+（本番環境）
+[/etc/httpd/conf.d/test.conf]
+・/var/www/html/testというディレクトリへ環境変数TEST_ENVへPRODUCTIONという値を設定しました
+
+[/var/www/html/test/test.php]
+TEST_ENVの値を取得し、LOCALであれば「ローカル環境です」、PRODUCTIONであれば「本番環境です」と表示される（ローカルと同じ内容です）
+
+
+▼mod_rewrite(htacccess)
+
+[/var/www/html/.htaccess]
+・RewriteRuleを2つ追記しました。
+・mod_writeが実行されるように、RewriteEngine Onも記載しました
+
+
+▼アドレスとポートのバインド
+
+[/etc/httpd/conf.d/test.conf]
+・Listen 8080と追記しました。
+・ファイヤーウォールの設定で、8080ポートも開放しました
+
+こちら設定リストです。
+[vagrant@vagrant ~]$ sudo firewall-cmd --list-all
+public (active)
+  target: default
+  icmp-block-inversion: no
+  interfaces: eth0 eth1
+  sources:
+  services: ssh dhcpv6-client http
+  ports: 8080/tcp
+  protocols:
+  masquerade: no
+  forward-ports:
+  source-ports:
+  icmp-blocks:
+  rich rules:
+
+
+▼BASIC認証/アクセス制限
+
+・htpasswdコマンドを使用し、/var/www/html/admin/.htpasswdへユーザー名とパスワードの設定をしました
+「sudo htpasswd -c /var/www/html/admin/.htpasswd test」
+・chownで.htpasswdへはapacheからしかアクセスできないように設定
+「sudo chown apache:apache ./.htpasswd」
+・chmodでパーミッションの設定（自分だけ読み書きできるように設定）
+「sudo chmod 600 ./.htpasswd」
+
+[/var/www/html/admin/.htacccess]
+・/var/www/html/adminというディレクトリ以下のファイルへアクセスした際に、Basic認証をするようにし、また社内IPからのみのアクセスを許可するようにした
+
+
+▼ログファイル
+[/etc/httpd/conf.d/test.conf]
+・log_config_moduleへLogformatとCustomLogの追記をしました
+・%tはリスエストされた時刻
+・/var/log/httpd/test/のパーミッションへ書き込みのみを有効にした
+
+
+
+↓設定ファイルのコード
+
+
+[/etc/httpd/conf.d/test.conf]
+
+<VirtualHost *:80>
+  DocumentRoot /var/www/vhosts/test1
+  ServerName one.example.com
+
+  <Directory "/var/www/vhosts/test1">
+    AllowOverride All
+  </Directory>
+
+</VirtualHost>
+
+<VirtualHost *:80>
+  DocumentRoot /var/www/vhosts/test2
+  ServerName second.example.com
+</VirtualHost>
+
+<VirtualHost *:80>
+  DocumentRoot /var/www/html
+  ServerName example.local
+
+  <Directory "/var/www/html/test">
+    SetEnv TEST_ENV LOCAL
+  </Directory>
+
+</VirtualHost>
+
+<IfModule log_config_module>
+    LogFormat "%t" test
+    CustomLog "logs/test/test_log" test
+</IfModule>
+
+Listen 8080
+
+
+[/var/www/vhosts/test1/.htaccess]
+
+RewriteEngine On
+
+RewriteRule ^index.php$  http://one.example.com/ [L,R=301]
+
+
+[/var/www/html/admin/.htpasswd]
+test:$apr1$nfw2Ffug$EBtrkriuqMqCXKpsqYAH1.
