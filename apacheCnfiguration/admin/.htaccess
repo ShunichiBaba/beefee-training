@@ -1,0 +1,14 @@
+#ip制限とBasic認証を共存させるために、RequireAllとRequireAnyで括りました。
+<RequireAll>
+   
+    #社内IPのみアクセス可
+    <RequireAny>
+        Require ip 122.217.37.50 
+    </RequireAny>
+
+    #Basic認証
+    AuthType Basic
+    AuthName "Auth"
+    AuthUserFile /var/www/html/admin/.htpasswd
+    Require valid-user
+</RequireAll>

@@ -3,6 +3,7 @@ Apacheの設定についての課題
 本番環境については、
 \\192.168.1.101\グループ共有\14.システム\Shunichi_Baba\
 ここにサーバーアクセス情報があります。
+/admin/以下のBasic認証はどちらともtestで入ることできます。
 
 
 
@@ -21,14 +22,14 @@ Apacheの設定についての課題
 [/etc/httpd/conf.d/test.conf]
 ・/var/www/html/testというディレクトリへ環境変数TEST_ENVへLOCALという値を設定しました
 
-[/var/www/html/test.php]
+[/var/www/html/test/test.php]
 TEST_ENVの値を取得し、LOCALであれば「ローカル環境です」、PRODUCTIONであれば「本番環境です」と表示される
 
 （本番環境）
 [/etc/httpd/conf.d/test.conf]
 ・/var/www/html/testというディレクトリへ環境変数TEST_ENVへPRODUCTIONという値を設定しました
 
-[/var/www/html/test.php]
+[/var/www/html/test/test.php]
 TEST_ENVの値を取得し、LOCALであれば「ローカル環境です」、PRODUCTIONであれば「本番環境です」と表示される（ローカルと同じ内容です）
 
 
@@ -45,15 +46,34 @@ TEST_ENVの値を取得し、LOCALであれば「ローカル環境です」、P
 ・Listen 8080と追記しました。
 ・ファイヤーウォールの設定で、8080ポートも開放しました
 
+こちら設定リストです。
+[vagrant@vagrant ~]$ sudo firewall-cmd --list-all
+public (active)
+  target: default
+  icmp-block-inversion: no
+  interfaces: eth0 eth1
+  sources:
+  services: ssh dhcpv6-client http
+  ports: 8080/tcp
+  protocols:
+  masquerade: no
+  forward-ports:
+  source-ports:
+  icmp-blocks:
+  rich rules:
+
 
 ▼BASIC認証/アクセス制限
 
-[/etc/httpd/htpasswd]
-・htpasswdコマンドを使用し、ユーザー名とパスワードの設定をしました
+・htpasswdコマンドを使用し、/var/www/html/admin/.htpasswdへユーザー名とパスワードの設定をしました
+「sudo htpasswd -c /var/www/html/admin/.htpasswd test」
+・chownで.htpasswdへはapacheからしかアクセスできないように設定
+「sudo chown apache:apache ./.htpasswd」
+・chmodでパーミッションの設定（自分だけ読み書きできるように設定）
+「sudo chmod 600 ./.htpasswd」
 
-[/etc/httpd/conf.d/test.conf]
-・/var/www/html/adminというディレクトリへBasic認証させる分を追記
-・/var/www/html/adminというディレクトリへ社内IPのみからアクセスできるように追記
+[/var/www/html/admin/.htacccess]
+・/var/www/html/adminというディレクトリ以下のファイルへアクセスした際に、Basic認証をするようにし、また社内IPからのみのアクセスを許可するようにした
 
 
 ▼ログファイル
@@ -72,6 +92,11 @@ TEST_ENVの値を取得し、LOCALであれば「ローカル環境です」、P
 <VirtualHost *:80>
   DocumentRoot /var/www/vhosts/test1
   ServerName one.example.com
+
+  <Directory "/var/www/vhosts/test1">
+    AllowOverride All
+  </Directory>
+
 </VirtualHost>
 
 <VirtualHost *:80>
@@ -83,26 +108,11 @@ TEST_ENVの値を取得し、LOCALであれば「ローカル環境です」、P
   DocumentRoot /var/www/html
   ServerName example.local
 
-  <Directory "var/www/html/admin">
-    AuthType Basic
-    AuthName "auth"
-    AuthUserFile /etc/httpd/htpasswd
-    Require valid-user
-  </Directory>
-
-  <Directory "var/www/html/admin">
-    Require ip 122.217.37.50
-  </Directory>
-
   <Directory "/var/www/html/test">
     SetEnv TEST_ENV LOCAL
   </Directory>
 
 </VirtualHost>
-
-<IfModule dir_module>
-    DirectoryIndex test1.html test2.html
-</IfModule>
 
 <IfModule log_config_module>
     LogFormat "%t" test
@@ -112,21 +122,12 @@ TEST_ENVの値を取得し、LOCALであれば「ローカル環境です」、P
 Listen 8080
 
 
-[/var/www/html/.htaccess]
+[/var/www/vhosts/test1/.htaccess]
 
 RewriteEngine On
 
-RewriteRule ^index.php$ http://example.local/ [L,R=301]
-
-RewriteRule ^123/$ /index.php/?q=123 [L,R=301]
-[vagrant@vagrant html]$ sudo vi /etc/httpd/conf.d/test.conf
-[vagrant@vagrant html]$ sudo cat .htaccess
-RewriteEngine On
-
-RewriteRule ^index.php$ http://example.local/ [L,R=301]
-
-RewriteRule ^123/$ /index.php/?q=123 [L,R=301]
+RewriteRule ^index.php$  http://one.example.com/ [L,R=301]
 
 
-[/etc/httpd/htpasswd]
-si-baba:$apr1$4f4hJy5m$3mrYRpizegbNUj6Eil5/Z.
+[/var/www/html/admin/.htpasswd]
+test:$apr1$nfw2Ffug$EBtrkriuqMqCXKpsqYAH1.

@@ -1,5 +1,14 @@
+#Options +FollowSymLinks
+
 RewriteEngine On
 
-RewriteRule ^index.php$ http://example.local/ [L,R=301]
+#下記は失敗したので、とりあえずコメントアウトで載せておきます
+#RewriteCond %{HTTP_HOST} ^one\.example\.com$
+#RewriteRule ^index.php$ http://one.example.com/ [L,R=301]
 
-RewriteRule ^123/$ /index.php/q=123 [L,R=301]
+#下の課題と共存させるために、QUERY_STRINGが数字のもの以外が実行されるようにしました。
+RewriteCond %{QUERY_STRING} !q=\d*
+RewriteRule ^index.php$  / [L,R=301]
+
+#123だけではなく、複数の個のどの数字の羅列にも対応させました。
+RewriteRule ^(\d*)/$ /index.php?q=$1 [L]
